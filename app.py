@@ -40,14 +40,33 @@ if missing_keys:
     logger.error(f"Missing required environment variables: {missing_keys}")
 
 # Configurazione Clients (solo se le chiavi esistono)
+openai_client = None
+anthropic_client = None
+slack_client = None
+
 if OPENAI_API_KEY:
-    openai_client = OpenAI(api_key=OPENAI_API_KEY)
+    try:
+        openai_client = OpenAI(api_key=OPENAI_API_KEY)
+    except Exception as e:
+        logger.error(f"Failed to initialize OpenAI client: {e}")
+
 if ANTHROPIC_API_KEY:
-    anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    try:
+        anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+    except Exception as e:
+        logger.error(f"Failed to initialize Anthropic client: {e}")
+
 if GOOGLE_API_KEY:
-    genai.configure(api_key=GOOGLE_API_KEY)
+    try:
+        genai.configure(api_key=GOOGLE_API_KEY)
+    except Exception as e:
+        logger.error(f"Failed to configure Google AI: {e}")
+
 if SLACK_BOT_TOKEN:
-    slack_client = WebClient(token=SLACK_BOT_TOKEN)
+    try:
+        slack_client = WebClient(token=SLACK_BOT_TOKEN)
+    except Exception as e:
+        logger.error(f"Failed to initialize Slack client: {e}")
 
 # Canali Slack
 INPUT_CHANNEL = os.getenv('INPUT_CHANNEL', 'ayro-briefs')
@@ -60,8 +79,8 @@ OUTPUT_CHANNEL = os.getenv('OUTPUT_CHANNEL', 'ai-responses')
 def call_lana(message):
     """LANA - Coordinatrice AI strategica"""
     try:
-        if not OPENAI_API_KEY:
-            return "❌ OpenAI API Key non configurata"
+        if not OPENAI_API_KEY or not openai_client:
+            return "❌ OpenAI API Key non configurata - Modalità demo: Ciao! Sono LANA, coordinatrice AI strategica. Al momento funziono in modalità demo. — LANA 🧠"
             
         response = openai_client.chat.completions.create(
             model="gpt-4o",
@@ -86,8 +105,8 @@ def call_lana(message):
 def call_claude(message):
     """CLAUDE - Motore di esecuzione tecnica"""
     try:
-        if not ANTHROPIC_API_KEY:
-            return "❌ Anthropic API Key non configurata"
+        if not ANTHROPIC_API_KEY or not anthropic_client:
+            return "❌ Anthropic API Key non configurata - Modalità demo: Ciao! Sono Claude, motore di esecuzione per sistemi tecnici AYROMEX. Al momento funziono in modalità demo. — Claude ⚡🛠️"
             
         response = anthropic_client.messages.create(
             model="claude-3-5-sonnet-20241022",
@@ -109,7 +128,7 @@ def call_gemini(message):
     """GEMINI - Creatore contenuti strategici"""
     try:
         if not GOOGLE_API_KEY:
-            return "❌ Google API Key non configurata"
+            return "❌ Google API Key non configurata - Modalità demo: Ciao! Sono Gemini, creatore di contenuti strategici per AYROHUB AI. Al momento funziono in modalità demo. — Gemini ⚔️"
             
         model = genai.GenerativeModel('gemini-1.5-pro')
         prompt = f"""Sei Gemini, creatore di contenuti strategici per AYROHUB AI. 
