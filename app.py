@@ -166,21 +166,160 @@ def dashboard():
         button { padding: 15px 40px; background: #00d4ff; border: none; color: white; border-radius: 10px; font-size: 18px; cursor: pointer; }
         .results { margin-top: 30px; text-align: left; }
         .agent { background: rgba(255,255,255,0.1); padding: 20px; margin: 15px 0; border-radius: 10px; border-left: 4px solid #00d4ff; }
-    </style>
+   <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #0f0f23 0%, #1a1a3a 100%);
+        color: #ffffff;
+        min-height: 100vh;
+        padding: 20px;
+    }
+    .container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    h1 {
+        font-size: 2.5em;
+        text-align: center;
+        margin-bottom: 10px;
+        background: linear-gradient(45deg, #00d4ff, #ff6b00);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .header {
+        text-align: center;
+        padding: 30px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        margin-bottom: 30px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .status {
+        background: rgba(0, 212, 255, 0.1);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+        padding: 20px;
+        border-radius: 15px;
+        margin: 20px 0;
+        text-align: center;
+        backdrop-filter: blur(10px);
+    }
+    .form-section {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 30px;
+        border-radius: 20px;
+        margin: 30px 0;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    textarea {
+        width: 100%;
+        min-height: 120px;
+        padding: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        background: rgba(0, 0, 0, 0.3);
+        color: white;
+        font-size: 16px;
+        font-family: inherit;
+        resize: vertical;
+        transition: all 0.3s ease;
+    }
+    textarea:focus {
+        outline: none;
+        border-color: #00d4ff;
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+    }
+    textarea::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    button {
+        background: linear-gradient(45deg, #00d4ff, #ff6b00);
+        color: white;
+        border: none;
+        padding: 18px 45px;
+        border-radius: 12px;
+        font-size: 18px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 20px;
+    }
+    button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(0, 212, 255, 0.4);
+    }
+    .results { margin-top: 30px; }
+    .agent {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 25px;
+        margin: 20px 0;
+        border-radius: 15px;
+        border-left: 4px solid #00d4ff;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+    .agent:hover {
+        transform: translateX(8px);
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+    .agent h3 {
+        color: #00d4ff;
+        margin-bottom: 15px;
+        font-size: 1.2em;
+    }
+    .agent:nth-child(2) { border-left-color: #ff6b00; }
+    .agent:nth-child(2) h3 { color: #ff6b00; }
+    .agent:nth-child(3) { border-left-color: #00ff88; }
+    .agent:nth-child(3) h3 { color: #00ff88; }
+    .agent:nth-child(4) { border-left-color: #ff00ff; }
+    .agent:nth-child(4) h3 { color: #ff00ff; }
+    .status-item {
+        display: inline-block;
+        margin: 0 15px;
+        padding: 8px 15px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        font-weight: 500;
+    }
+    @media (max-width: 768px) {
+        h1 { font-size: 2em; }
+        .container { padding: 10px; }
+        .form-section, .header { padding: 20px; }
+        button { padding: 15px 35px; }
+    }
+</style>
 </head>
 <body>
     <div class="container">
-        <h1>🤖 AYROHUB AI Dashboard</h1>
-        <p>Sistema di Coordinamento Multi-Agente per Christian De Palma / AYROMEX Group</p>
-        
-        <div class="status">
-            <strong>Status Agenti:</strong><br>
-            🧠 LANA: ''' + ('✅ ATTIVA' if lana_active else '🔧 DEMO') + '''<br>
-            ⚡ CLAUDE: ''' + ('✅ ATTIVO' if claude_active else '🔧 DEMO') + '''<br>
-            ⚔️ GEMINI: ''' + ('✅ ATTIVO' if gemini_active else '🔧 DEMO') + '''<br>
-            🧩 DEEPSEEK: ✅ ATTIVO
+        <div class="header">
+            <h1>🤖 AYROHUB AI</h1>
+            <p style="opacity: 0.9; font-size: 1.1em;">Sistema di Coordinamento Multi-Agente per Christian De Palma / AYROMEX Group</p>
         </div>
         
+        <div class="status">
+            <strong style="font-size: 1.1em; margin-bottom: 15px; display: block;">⚡ Status Sistema AYROHUB AI</strong>
+            <div class="status-item">🧠 LANA: ''' + ('✅ ATTIVA' if lana_active else '🔧 DEMO') + '''</div>
+            <div class="status-item">⚡ CLAUDE: ''' + ('✅ ATTIVO' if claude_active else '🔧 DEMO') + '''</div>
+            <div class="status-item">⚔️ GEMINI: ''' + ('✅ ATTIVO' if gemini_active else '🔧 DEMO') + '''</div>
+            <div class="status-item">🧩 DEEPSEEK: ✅ ATTIVO</div>
+        </div>
+        
+        <div class="form-section">
+            <h3 style="color: #00d4ff; margin-bottom: 20px; font-size: 1.3em;">📝 Invia Briefing al Team AI</h3>
+            <textarea id="message" placeholder="Esempio: Ciao team AYROHUB! Sono Christian De Palma. Voglio analizzare le tendenze AI 2025 e sviluppare una strategia completa per AYROMEX Group..."></textarea>
+            <button onclick="sendMessage()">🚀 Invia al Team AI</button>
+        </div>
+        
+        <div class="results" id="results"></div>
+    </div>
+    
+    [resto dello script JavaScript uguale]        
         <h3>📝 Invia Briefing al Team AI</h3>
         <textarea id="message" placeholder="Esempio: Ciao team AYROHUB! Voglio analizzare le tendenze AI 2025 e sviluppare una strategia per AYROMEX..."></textarea><br>
         <button onclick="sendMessage()">🚀 Invia al Team AI</button>
