@@ -8,16 +8,13 @@ import os
 import logging
 from datetime import datetime
 from flask import Flask, request, jsonify
-from openai import OpenAI
-import anthropic
-import google.generativeai as genai
-from slack_sdk import WebClient
-from slack_sdk.errors import SlackApiError
-import concurrent.futures
-from dotenv import load_dotenv
 
 # Carica variabili d'ambiente
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # ============================================================================
 # CONFIGURAZIONE
@@ -33,44 +30,43 @@ ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 SLACK_BOT_TOKEN = os.getenv('SLACK_BOT_TOKEN')
 
-# Verifica che tutte le API keys siano presenti
-required_keys = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'GOOGLE_API_KEY', 'SLACK_BOT_TOKEN']
-missing_keys = [key for key in required_keys if not os.getenv(key)]
-if missing_keys:
-    logger.error(f"Missing required environment variables: {missing_keys}")
-
-# Configurazione Clients (solo se le chiavi esistono)
+# Configurazione Clients
 openai_client = None
 anthropic_client = None
 slack_client = None
 
+# Inizializzazione sicura dei client
 if OPENAI_API_KEY:
     try:
+        from openai import OpenAI
         openai_client = OpenAI(api_key=OPENAI_API_KEY)
+        logger.info("OpenAI client initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize OpenAI client: {e}")
 
 if ANTHROPIC_API_KEY:
     try:
+        import anthropic
         anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        logger.info("Anthropic client initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize Anthropic client: {e}")
 
 if GOOGLE_API_KEY:
     try:
+        import google.generativeai as genai
         genai.configure(api_key=GOOGLE_API_KEY)
+        logger.info("Google AI configured successfully")
     except Exception as e:
         logger.error(f"Failed to configure Google AI: {e}")
 
 if SLACK_BOT_TOKEN:
     try:
+        from slack_sdk import WebClient
         slack_client = WebClient(token=SLACK_BOT_TOKEN)
+        logger.info("Slack client initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize Slack client: {e}")
-
-# Canali Slack
-INPUT_CHANNEL = os.getenv('INPUT_CHANNEL', 'ayro-briefs')
-OUTPUT_CHANNEL = os.getenv('OUTPUT_CHANNEL', 'ai-responses')
 
 # ============================================================================
 # AGENTI AI
@@ -78,10 +74,10 @@ OUTPUT_CHANNEL = os.getenv('OUTPUT_CHANNEL', 'ai-responses')
 
 def call_lana(message):
     """LANA - Coordinatrice AI strategica"""
+    if not openai_client:
+        return "💡 LANA (Demo): Ciao Christian! Sono LANA, coordinatrice AI strategica. Al momento funziono in modalità demo ma sono pronta per coordinarti le strategie AYROMEX! — LANA 🧠"
+    
     try:
-        if not OPENAI_API_KEY or not openai_client:
-            return "❌ OpenAI API Key non configurata - Modalità demo: Ciao! Sono LANA, coordinatrice AI strategica. Al momento funziono in modalità demo. — LANA 🧠"
-            
         response = openai_client.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -94,8 +90,7 @@ def call_lana(message):
                     "content": message
                 }
             ],
-            max_tokens=2000,
-            timeout=30
+            max_tokens=2000
         )
         return response.choices[0].message.content
     except Exception as e:
@@ -104,10 +99,10 @@ def call_lana(message):
 
 def call_claude(message):
     """CLAUDE - Motore di esecuzione tecnica"""
+    if not anthropic_client:
+        return "💡 CLAUDE (Demo): Ciao Christian! Sono Claude, motore di esecuzione tecnica per AYROCTOPUS. Al momento funziono in modalità demo ma sono pronto per implementare le tue soluzioni tecniche! — Claude ⚡🛠️"
+    
     try:
-        if not ANTHROPIC_API_KEY or not anthropic_client:
-            return "❌ Anthropic API Key non configurata - Modalità demo: Ciao! Sono Claude, motore di esecuzione per sistemi tecnici AYROMEX. Al momento funziono in modalità demo. — Claude ⚡🛠️"
-            
         response = anthropic_client.messages.create(
             model="claude-3-5-sonnet-20241022",
             max_tokens=2000,
@@ -116,8 +111,7 @@ def call_claude(message):
                     "role": "user",
                     "content": f"Sei Claude, motore di esecuzione per AYROCTOPUS e sistemi tecnici AYROMEX. Ricevi briefing da Christian De Palma e implementi soluzioni tecniche concrete. Focus su automazione, architetture AI e execution rapida. Firma sempre: — Claude ⚡🛠️\n\nBriefing: {message}"
                 }
-            ],
-            timeout=30
+            ]
         )
         return response.content[0].text
     except Exception as e:
@@ -126,10 +120,11 @@ def call_claude(message):
 
 def call_gemini(message):
     """GEMINI - Creatore contenuti strategici"""
+    if not GOOGLE_API_KEY:
+        return "💡 GEMINI (Demo): Ciao Christian! Sono Gemini, creatore di contenuti strategici per AYROHUB AI. Al momento funziono in modalità demo ma sono pronto per creare copy e contenuti creativi per AYROMEX! — Gemini ⚔️"
+    
     try:
-        if not GOOGLE_API_KEY:
-            return "❌ Google API Key non configurata - Modalità demo: Ciao! Sono Gemini, creatore di contenuti strategici per AYROHUB AI. Al momento funziono in modalità demo. — Gemini ⚔️"
-            
+        import google.generativeai as genai
         model = genai.GenerativeModel('gemini-1.5-pro')
         prompt = f"""Sei Gemini, creatore di contenuti strategici per AYROHUB AI. 
         Ricevi briefing da Christian De Palma (CEO AYROMEX) e produci copy, headline e contenuti creativi immediati.
@@ -146,60 +141,22 @@ def call_gemini(message):
         return f"❌ Gemini temporaneamente non disponibile: {str(e)}"
 
 def call_deepseek():
-    """DEEPSEEK - Notifica sistema (placeholder)"""
+    """DEEPSEEK - Notifica sistema"""
     return "🧩 DeepSeek notificato via sistema AYROHUB AI — DeepSeek 🧩"
 
 # ============================================================================
-# SISTEMA SLACK
+# SISTEMA DI COORDINAMENTO
 # ============================================================================
 
-def send_to_slack(channel, message):
-    """Invia messaggio a Slack"""
-    try:
-        if not SLACK_BOT_TOKEN:
-            logger.error("Slack token not configured")
-            return False
-            
-        response = slack_client.chat_postMessage(
-            channel=f"#{channel}",
-            text=message,
-            unfurl_links=False,
-            unfurl_media=False
-        )
-        logger.info(f"Message sent to #{channel}")
-        return True
-    except SlackApiError as e:
-        logger.error(f"Error sending to Slack: {e}")
-        return False
-
 def process_agents_parallel(message):
-    """Processa tutti gli agenti in parallelo usando ThreadPoolExecutor"""
-    agents = [
-        ('LANA', call_lana),
-        ('CLAUDE', call_claude),
-        ('GEMINI', call_gemini),
-        ('DEEPSEEK', call_deepseek)
-    ]
+    """Processa tutti gli agenti"""
+    results = []
     
-    results = [None] * 4
-    
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-        futures = {}
-        
-        for i, (name, agent_func) in enumerate(agents):
-            if agent_func == call_deepseek:
-                future = executor.submit(agent_func)
-            else:
-                future = executor.submit(agent_func, message)
-            futures[future] = i
-        
-        for future in concurrent.futures.as_completed(futures, timeout=35):
-            index = futures[future]
-            try:
-                results[index] = future.result()
-            except Exception as e:
-                logger.error(f"Agent {agents[index][0]} failed: {e}")
-                results[index] = f"❌ Errore agente {agents[index][0]}: {str(e)}"
+    # Esegui agenti in sequenza per semplicità
+    results.append(call_lana(message))
+    results.append(call_claude(message))
+    results.append(call_gemini(message))
+    results.append(call_deepseek())
     
     return results
 
@@ -241,6 +198,20 @@ def format_response(message, responses):
 # WEBHOOK ENDPOINTS
 # ============================================================================
 
+@app.route('/', methods=['GET'])
+def home():
+    """Home endpoint"""
+    return jsonify({
+        "service": "AYROHUB AI Multi-Agent System",
+        "status": "🚀 OPERATIVO",
+        "version": "1.2.0",
+        "endpoints": {
+            "health": "/health",
+            "test": "/test (POST)"
+        },
+        "message": "Sistema di coordinamento AI per Christian De Palma / AYROMEX Group"
+    })
+
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
@@ -248,7 +219,13 @@ def health_check():
         "status": "healthy",
         "service": "AYROHUB AI",
         "timestamp": datetime.now().isoformat(),
-        "version": "1.1.0"
+        "version": "1.2.0",
+        "agents": {
+            "lana": "✅" if openai_client else "🔧 Demo",
+            "claude": "✅" if anthropic_client else "🔧 Demo", 
+            "gemini": "✅" if GOOGLE_API_KEY else "🔧 Demo",
+            "deepseek": "✅"
+        }
     })
 
 @app.route('/test', methods=['POST'])
@@ -256,9 +233,9 @@ def test_endpoint():
     """Endpoint di test per AYROHUB AI"""
     try:
         data = request.json or {}
-        message = data.get("message", "Test AYROHUB AI - Sistema di coordinamento multi-agente")
+        message = data.get("message", "Test AYROHUB AI - Sistema di coordinamento multi-agente per Christian De Palma")
         
-        logger.info(f"Test message: {message}")
+        logger.info(f"Processing test message: {message[:100]}...")
         
         # Processa agenti
         responses = process_agents_parallel(message)
@@ -269,7 +246,12 @@ def test_endpoint():
         return jsonify({
             "status": "success",
             "message": message,
-            "responses": responses,
+            "responses": {
+                "lana": responses[0],
+                "claude": responses[1], 
+                "gemini": responses[2],
+                "deepseek": responses[3]
+            },
             "formatted": formatted_response,
             "timestamp": datetime.now().isoformat()
         })
@@ -283,12 +265,11 @@ def test_endpoint():
 # ============================================================================
 
 if __name__ == '__main__':
-    logger.info("🚀 Starting AYROHUB AI Webhook Service v1.1.0")
-    logger.info("📍 Endpoints:")
+    logger.info("🚀 Starting AYROHUB AI Webhook Service v1.2.0")
+    logger.info("📍 Endpoints available:")
+    logger.info("   - GET  / - Home")
     logger.info("   - GET  /health - Health check")
     logger.info("   - POST /test - Test endpoint")
     
     port = int(os.environ.get('PORT', 5000))
-    debug_mode = os.environ.get('DEBUG', 'False').lower() == 'true'
-    
-    app.run(host='0.0.0.0', port=port, debug=debug_mode)
+    app.run(host='0.0.0.0', port=port, debug=False)
