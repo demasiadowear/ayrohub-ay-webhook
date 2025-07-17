@@ -55,12 +55,23 @@ slack_client = None
 if OPENAI_API_KEY:
     try:
         from openai import OpenAI
+        logger.info(f"Attempting OpenAI initialization with key: {OPENAI_API_KEY[:20]}...")
+        
         openai_client = OpenAI(api_key=OPENAI_API_KEY)
-        logger.info("✅ OpenAI client initialized successfully")
+        
+        # Test immediato con modello base
+        logger.info("Testing OpenAI client with simple request...")
+        test = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": "hi"}],
+            max_tokens=5
+        )
+        logger.info("✅ OpenAI client initialized and tested successfully")
+        
     except Exception as e:
-        logger.error(f"❌ Failed to initialize OpenAI client: {e}")
+        logger.error(f"❌ Failed to initialize OpenAI client: {str(e)}")
+        logger.error(f"❌ Error type: {type(e).__name__}")
         openai_client = None
-
 if ANTHROPIC_API_KEY:
     try:
         import anthropic
@@ -125,7 +136,7 @@ def call_lana(message):
     
     try:
         response = openai_client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             messages=[
                 {
                     "role": "system",
