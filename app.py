@@ -201,19 +201,292 @@ def format_response(message, responses):
 @app.route('/', methods=['GET'])
 def home():
     """Serve the dashboard"""
-    try:
-        with open('dashboard.html', 'r', encoding='utf-8') as f:
-            return f.read()
-    except FileNotFoundError:
-        return jsonify({
-            "service": "AYROHUB AI Multi-Agent System",
-            "status": "🚀 OPERATIVO",
-            "message": "Dashboard not found - API endpoints available",
-            "endpoints": {
-                "health": "/health",
-                "test": "/test (POST)"
+    return '''<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AYROHUB AI - Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3a 100%);
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .header {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #00d4ff, #ff6b00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header p {
+            opacity: 0.8;
+            font-size: 1.1em;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .status-bar {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .form-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #ffffff;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+        textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .btn {
+            background: linear-gradient(45deg, #00d4ff, #ff6b00);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .responses {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 20px;
+            display: none;
+            backdrop-filter: blur(10px);
+        }
+        .agent {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 15px;
+            border-left: 4px solid #00d4ff;
+            transition: all 0.3s ease;
+        }
+        .agent:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .agent h3 {
+            margin-bottom: 15px;
+            color: #00d4ff;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            margin: 20px 0;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
             }
-        })
+            .container {
+                padding: 10px;
+            }
+            .form-section, .responses {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AYROHUB AI</h1>
+            <p>Sistema di Coordinamento Multi-Agente per Christian De Palma / AYROMEX Group</p>
+        </div>
+
+        <div class="status-bar">
+            <span style="color: #00ff88;">🟢 Sistema OPERATIVO</span> | 
+            <span>🧠 LANA</span> | 
+            <span>⚡ CLAUDE</span> | 
+            <span>⚔️ GEMINI</span> | 
+            <span>🧩 DEEPSEEK</span>
+        </div>
+
+        <div class="form-section">
+            <h2 style="color: #00d4ff; margin-bottom: 20px;">📝 Invia Briefing al Team AI</h2>
+            <form id="briefingForm">
+                <textarea 
+                    id="message" 
+                    placeholder="Esempio: Ciao team AYROHUB! Voglio analizzare le tendenze AI 2025 e sviluppare una strategia per AYROMEX..."
+                    required
+                ></textarea>
+                <br>
+                <button type="submit" class="btn" id="sendBtn">🚀 Invia al Team AI</button>
+            </form>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <h3>⏳ Il team AI sta elaborando il tuo briefing...</h3>
+        </div>
+
+        <div class="responses" id="responses">
+            <h2 style="color: #ff6b00; margin-bottom: 25px;">💬 Risposte del Team AI</h2>
+            <div id="responseContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('briefingForm');
+        const loading = document.getElementById('loading');
+        const responses = document.getElementById('responses');
+        const responseContent = document.getElementById('responseContent');
+        const sendBtn = document.getElementById('sendBtn');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const message = document.getElementById('message').value.trim();
+            if (!message) return;
+
+            // Show loading
+            loading.style.display = 'block';
+            responses.style.display = 'none';
+            sendBtn.disabled = true;
+            sendBtn.textContent = '⏳ Elaborando...';
+
+            try {
+                const response = await fetch('/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Errore di comunicazione con il server');
+                }
+
+                const data = await response.json();
+                
+                loading.style.display = 'none';
+                
+                const timestamp = new Date().toLocaleString('it-IT');
+                
+                responseContent.innerHTML = `
+                    <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; margin-bottom: 25px; border-left: 4px solid #00d4ff;">
+                        <strong>📝 Briefing:</strong> ${message}<br>
+                        <strong>⏰ Timestamp:</strong> ${timestamp}
+                    </div>
+
+                    <div class="agent">
+                        <h3>🧠 LANA (Coordinamento Strategico)</h3>
+                        <p>${data.responses.lana || 'Non disponibile'}</p>
+                    </div>
+
+                    <div class="agent">
+                        <h3>⚡ CLAUDE (Execution Tecnica)</h3>
+                        <p>${data.responses.claude || 'Non disponibile'}</p>
+                    </div>
+
+                    <div class="agent">
+                        <h3>⚔️ GEMINI (Creatività & Copy)</h3>
+                        <pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">${data.responses.gemini || 'Non disponibile'}</pre>
+                    </div>
+
+                    <div class="agent">
+                        <h3>🧩 DEEPSEEK (Sistema & Monitoring)</h3>
+                        <p>${data.responses.deepseek || 'Non disponibile'}</p>
+                    </div>
+
+                    <div style="background: rgba(0,255,136,0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #00ff88; text-align: center; margin-top: 20px;">
+                        ✅ <strong>Processo AYROHUB AI completato</strong>
+                    </div>
+                `;
+                
+                responses.style.display = 'block';
+                responses.scrollIntoView({ behavior: 'smooth' });
+
+            } catch (error) {
+                loading.style.display = 'none';
+                responseContent.innerHTML = `
+                    <div style="background: rgba(255,0,0,0.1); padding: 20px; border-radius: 10px; border-left: 4px solid #ff6b6b; color: #ff6b6b;">
+                        ❌ <strong>Errore:</strong> ${error.message}
+                    </div>
+                `;
+                responses.style.display = 'block';
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = '🚀 Invia al Team AI';
+            }
+        });
+
+        // Auto-resize textarea
+        const textarea = document.getElementById('message');
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    </script>
+</body>
+</html>'''
+
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
@@ -269,7 +542,7 @@ def test_endpoint():
 if __name__ == '__main__':
     logger.info("🚀 Starting AYROHUB AI Webhook Service v1.2.0")
     logger.info("📍 Endpoints available:")
-    logger.info("   - GET  / - Home")
+    logger.info("   - GET  / - Dashboard")
     logger.info("   - GET  /health - Health check")
     logger.info("   - POST /test - Test endpoint")
     
