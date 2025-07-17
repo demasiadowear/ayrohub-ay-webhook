@@ -200,18 +200,20 @@ def format_response(message, responses):
 
 @app.route('/', methods=['GET'])
 def home():
-    """Home endpoint"""
-    return jsonify({
-        "service": "AYROHUB AI Multi-Agent System",
-        "status": "🚀 OPERATIVO",
-        "version": "1.2.0",
-        "endpoints": {
-            "health": "/health",
-            "test": "/test (POST)"
-        },
-        "message": "Sistema di coordinamento AI per Christian De Palma / AYROMEX Group"
-    })
-
+    """Serve the dashboard"""
+    try:
+        with open('dashboard.html', 'r', encoding='utf-8') as f:
+            return f.read()
+    except FileNotFoundError:
+        return jsonify({
+            "service": "AYROHUB AI Multi-Agent System",
+            "status": "🚀 OPERATIVO",
+            "message": "Dashboard not found - API endpoints available",
+            "endpoints": {
+                "health": "/health",
+                "test": "/test (POST)"
+            }
+        })
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
