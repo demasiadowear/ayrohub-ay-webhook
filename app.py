@@ -35,14 +35,60 @@ openai_client = None
 anthropic_client = None
 slack_client = None
 
+# Debug delle API keys
+logger.info(f"OPENAI_API_KEY presente: {'✅' if OPENAI_API_KEY else '❌'}")
+logger.info(f"ANTHROPIC_API_KEY presente: {'✅' if ANTHROPIC_API_KEY else '❌'}")
+logger.info(f"GOOGLE_API_KEY presente: {'✅' if GOOGLE_API_KEY else '❌'}")
+
+if OPENAI_API_KEY:
+    logger.info(f"OPENAI_API_KEY inizia con: {OPENAI_API_KEY[:10]}...")
+    
+if ANTHROPIC_API_KEY:
+    logger.info(f"ANTHROPIC_API_KEY inizia con: {ANTHROPIC_API_KEY[:10]}...")
+
+# Configurazione Clients
+openai_client = None
+anthropic_client = None
+slack_client = None
+
 # Inizializzazione sicura dei client
 if OPENAI_API_KEY:
     try:
         from openai import OpenAI
         openai_client = OpenAI(api_key=OPENAI_API_KEY)
-        logger.info("OpenAI client initialized successfully")
+        logger.info("✅ OpenAI client initialized successfully")
     except Exception as e:
-        logger.error(f"Failed to initialize OpenAI client: {e}")
+        logger.error(f"❌ Failed to initialize OpenAI client: {e}")
+        openai_client = None
+
+if ANTHROPIC_API_KEY:
+    try:
+        import anthropic
+        anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        logger.info("✅ Anthropic client initialized successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize Anthropic client: {e}")
+        anthropic_client = None
+
+if GOOGLE_API_KEY:
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=GOOGLE_API_KEY)
+        logger.info("✅ Google AI configured successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to configure Google AI: {e}")
+
+if SLACK_BOT_TOKEN:
+    try:
+        from slack_sdk import WebClient
+        slack_client = WebClient(token=SLACK_BOT_TOKEN)
+        logger.info("✅ Slack client initialized successfully")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize Slack client: {e}")
+
+# Debug finale
+logger.info(f"Final status - OpenAI client: {'✅' if openai_client else '❌'}")
+logger.info(f"Final status - Anthropic client: {'✅' if anthropic_client else '❌'}")
 
 if ANTHROPIC_API_KEY:
     try:
